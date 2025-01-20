@@ -1,0 +1,6 @@
+/build/
+/bin/
+/.cache/
+
+build.ps1
+
