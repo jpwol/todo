@@ -14,14 +14,18 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${BIN_DIR})
 
 add_executable(todo ${SRC_FILES})
 
-target_include_directories(todo
+if(WIN32)
+  target_include_directories(todo
   PRIVATE
     C:/lib/cJSON/include
-)
+  )
 
-target_link_libraries(todo
-  C:/lib/cJSON/lib/libcjson.a
-)
+  target_link_libraries(todo
+    C:/lib/cJSON/lib/libcjson.a
+  )
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
+elseif(UNIX)
+  target_link_libraries(todo cjson)
+endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -static")
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
