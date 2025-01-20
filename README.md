@@ -27,6 +27,40 @@ The project is currently set to static link, so the CMakeLists.txt would have to
 set DBUILD_SHARED_LIBS=ON to OFF. I also ran into issues with the c90 std having trouble with double to float conversion within cJSON.
 To rememdy this, I changed the build standard to c99, and added -Wno-error=float-conversion as a build flag.
 
+#### Linux
+
+Either clone the [cJSON](https://github.com/DaveGamble/cJSON) repository and build it, or retreive it from your distobution's package manager.
+cJSON has documentation on building for Linux on the repository page. For retrieving from a package manager:
+
+<details>
+    <summary>Arch Based</summary>
+
+```bash
+sudo pacman -S cjson
+```
+
+</details>
+
+<details>
+    <summary>Debian Based</summary>
+
+```bash
+sudo apt install libcjson-dev
+```
+
+</details>
+
+<details>
+    <summary>Void</summary>
+
+```bash
+sudo xbps-install cjson-devel
+```
+
+</details>
+
+If these packages don't contain the libraries you need, be sure to grab the non dev/devel versions of the packages as well.
+
 ## Building
 
 Once you have cJSON, just change the CMakeLists.txt to path to where the header and library files are (if static linking, otherwise include the .dll in the project directory).
