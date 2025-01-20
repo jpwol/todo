@@ -193,8 +193,8 @@ void add_task(char* group_name, char* task_string) {
         cJSON* json_task = cJSON_CreateObject();
         char* buf = (char*)malloc(12);
 
-        cJSON_AddStringToObject(json_task, itoa(inner_arr_size, buf, 10),
-                                task_string);
+        snprintf(buf, sizeof(buf), "%d", inner_arr_size);
+        cJSON_AddStringToObject(json_task, buf, task_string);
         free(buf);
 
         cJSON_AddItemToArray(task_group_object, json_task);
