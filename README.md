@@ -29,7 +29,7 @@ To rememdy this, I changed the build standard to c99, and added -Wno-error=float
 
 #### Linux
 
-Either clone the [cJSON](https://github.com/DaveGamble/cJSON) repository and build it, or retreive it from your distobution's package manager.
+Either clone the [cJSON](https://github.com/DaveGamble/cJSON) repository and build it, or retreive it from your distrobution's package manager.
 cJSON has documentation on building for Linux on the repository page. For retrieving from a package manager:
 
 <details>
@@ -54,19 +54,22 @@ sudo apt install libcjson-dev
     <summary>Void</summary>
 
 ```bash
-sudo xbps-install cjson-devel
+sudo xbps-install cJSON-devel
 ```
 
 </details>
 
-If these packages don't contain the libraries you need, be sure to grab the non dev/devel versions of the packages as well.
+Installing these packages should install the non dev/devel as a dependency, but if not, make sure to grab those too.
 
 ## Building
 
-Once you have cJSON, just change the CMakeLists.txt to path to where the header and library files are (if static linking, otherwise include the .dll in the project directory).
-In the project root directory, run the command:
+If on Windows, you'll have to edit the CMakeLists.txt to point to where the cJSON header and library file are. Unix users shouldn't have to do anything if they installed cJSON through their package manager.
+
+Once cJSON is built/installed, run this
 
 ```bash
+git clone https://github.com/jpwol/todo.git
+cd todo
 cmake . -G "Unix Makefiles" -B build
 cd build
 make
