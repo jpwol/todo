@@ -128,20 +128,18 @@ void print_json_string() {
 
 void print_help_message() {
   char* help_message = {
-      "todo: a simple todo list maker\n\n"
-      "Usage: todo [option]\n"
-      "   or: todo [option] <group>\n"
-      "   or: todo [option] <group> <task>\n\n"
+      "Usage: todo [option] [<group>] [task]\n"
+      "Make and view todo lists in the command line\n\n"
       "If todo file exists, use 'todo' to print out todo list. Else:\n\n"
       "Options:\n"
-      "-h\tprint this help message\n"
-      "-m\tmake a todo file\n"
-      "-d\tdelete a todo file/group/task\n"
-      "  \tuse todo -d [group] [task]\n"
-      "-g\tcreate a todo group\n"
-      "  \tuse todo -g <group>\n"
-      "-a\tadd a task to a group\n"
-      "  \tuse todo -a <group> <task>\n"};
+      "\t-h\tprint this help message\n"
+      "\t-m\tmake a todo file\n"
+      "\t-d\tdelete a todo file/group/task\n"
+      "  \t\tuse todo -d [<group>] [task]\n"
+      "\t-g\tcreate a todo group\n"
+      "  \t\tuse todo -g <group>\n"
+      "\t-a\tadd a task to a group\n"
+      "  \t\tuse todo -a <group> <task>\n"};
 
   printf("%s", help_message);
 }
