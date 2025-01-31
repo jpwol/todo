@@ -12,6 +12,9 @@
  *       - Change arguments to not use '-' and just be the letter instead
  *       - Update help printout
  *
+ *       - FINISH add_task REWRITE!
+ *         - Functionality is done, add safety checks and fix indexing
+ *
  * DONE: Added functionality to makefile function to add group name.
  */
 
@@ -26,7 +29,7 @@ void make_file(char* name);
 void delete_file();
 void save_file(cJSON* json);
 
-void add_task(char* group_name, char* task_string);
+void add_task(char* task_string);
 void delete_task(char* group_name, char* task_index);
 
 void add_task_group(char* group_name);
@@ -69,8 +72,8 @@ void handle_args(int num_args, char** args) {
 
   if (!strcmp(args[1], "m")) {
     make_file(args[2]);
-  } else if (!strcmp(args[1], "-d")) {
-    if (num_args < 3)
+  } else if (!strcmp(args[1], "d")) {
+    if (num_args == 2)
       delete_file();
     else if (num_args == 3)
       delete_task_group(args[2]);
@@ -78,9 +81,9 @@ void handle_args(int num_args, char** args) {
       delete_task(args[2], args[3]);
     else
       print_help_message();
-  } else if (!strcmp(args[1], "-a")) {
-    if (num_args == 4)
-      add_task(args[2], args[3]);
+  } else if (!strcmp(args[1], "a")) {
+    if (num_args == 3)
+      add_task(args[2]);
     else
       print_help_message();
   } else if (!strcmp(args[1], "-g")) {
@@ -185,35 +188,47 @@ void add_task_group(char* group_name) {
   }
 }
 
-void add_task(char* group_name, char* task_string) {
+void add_task(char* task_string) {
   if (check_file_status()) {
     cJSON* json = read_json_data();
 
     cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
-    int array_size = cJSON_GetArraySize(tasks_array);
+    cJSON* group = cJSON_GetArrayItem(tasks_array, 0);
+    cJSON* group_array = group->child;
 
-    for (int i = 0; i < array_size; i++) {
-      cJSON* task_group = cJSON_GetArrayItem(tasks_array, i);
-      cJSON* task_group_object = cJSON_GetObjectItem(task_group, group_name);
-      int inner_arr_size = cJSON_GetArraySize(task_group_object);
-
-      if (task_group_object != NULL) {
-        printf("todo: group found. Adding task as element %d.\n",
-               ++inner_arr_size);
-
-        cJSON* json_task = cJSON_CreateObject();
-        char* buf = (char*)malloc(12);
-
-        snprintf(buf, sizeof(buf), "%d", inner_arr_size);
-        cJSON_AddStringToObject(json_task, buf, task_string);
-        free(buf);
-
-        cJSON_AddItemToArray(task_group_object, json_task);
-      }
-    }
+    cJSON* task = cJSON_CreateObject();
+    int arr_len = cJSON_GetArraySize(group_array);
+    char* buf = (char*)malloc(12);
+    snprintf(buf, sizeof(buf), "%d", arr_len);
+    cJSON_AddStringToObject(task, buf, task_string);
+    cJSON_AddItemToArray(group_array, task);
     save_file(json);
-  } else {
-    print_no_file_message();
+    // int array_size = cJSON_GetArraySize(tasks_array);
+
+    //   for (int i = 0; i < array_size; i++) {
+    //     cJSON* task_group = cJSON_GetArrayItem(tasks_array, i);
+    //     cJSON* task_group_object = cJSON_GetObjectItem(task_group,
+    //     group_name); int inner_arr_size =
+    //     cJSON_GetArraySize(task_group_object);
+    //
+    //     if (task_group_object != NULL) {
+    //       printf("todo: group found. Adding task as element %d.\n",
+    //              ++inner_arr_size);
+    //
+    //       cJSON* json_task = cJSON_CreateObject();
+    //       char* buf = (char*)malloc(12);
+    //
+    //       snprintf(buf, sizeof(buf), "%d", inner_arr_size);
+    //       cJSON_AddStringToObject(json_task, buf, task_string);
+    //       free(buf);
+    //
+    //       cJSON_AddItemToArray(task_group_object, json_task);
+    //     }
+    //   }
+    //   save_file(json);
+    // } else {
+    //   print_no_file_message();
+    // }
   }
 }
 
