@@ -3,6 +3,18 @@
 #include <stdlib.h>
 #include <string.h>
 
+/*
+ * Summary: Change program structure to work based off one group, made at time
+ * of file creation. This simplifies the usage of the program, as well as
+ * speeding up it's usage for the user.
+ *
+ * TODO: - Get rid of add and delete group functions.
+ *       - Change arguments to not use '-' and just be the letter instead
+ *       - Update help printout
+ *
+ * DONE: Added functionality to makefile function to add group name.
+ */
+
 int check_file_status();
 
 char* read_file();
@@ -10,7 +22,7 @@ cJSON* read_json_data();
 
 void handle_args(int num_args, char** args);
 
-void make_file();
+void make_file(char* name);
 void delete_file();
 void save_file(cJSON* json);
 
@@ -25,6 +37,7 @@ void print_help_message();
 void print_no_file_message();
 
 FILE* todo;
+char* task_name = NULL;
 
 int main(int argc, char* argv[]) {
   if (argc < 2) {
@@ -54,8 +67,8 @@ int check_file_status() {
 void handle_args(int num_args, char** args) {
   int file_exists = check_file_status();
 
-  if (!strcmp(args[1], "-m")) {
-    make_file();
+  if (!strcmp(args[1], "m")) {
+    make_file(args[2]);
   } else if (!strcmp(args[1], "-d")) {
     if (num_args < 3)
       delete_file();
@@ -289,18 +302,26 @@ void delete_task_group(char* group_name) {
   }
 }
 
-void make_file() {
+void make_file(char* name) {
   int file_exists = check_file_status();
   if (file_exists) {
     printf("todo already exists.\nUse todo -h for help.\n");
   } else {
     todo = fopen("todo.json", "w");
+    fclose(todo);
     if (todo) {
       printf("todo file created\n");
+      cJSON* json = read_json_data();
+      json = cJSON_CreateObject();
+      cJSON_AddArrayToObject(json, "tasks");
+      cJSON* task_array = cJSON_GetObjectItem(json, "tasks");
+      cJSON* task = cJSON_CreateObject();
+      cJSON_AddArrayToObject(task, name);
+      cJSON_AddItemToArray(task_array, task);
+      save_file(json);
     } else {
       printf("Error creating todo file\n");
     }
-    fclose(todo);
   }
   return;
 }
@@ -352,11 +373,6 @@ cJSON* read_json_data() {
   if (json_data) {
     json = cJSON_Parse(json_data);
     free(json_data);
-  }
-
-  if (!json) {
-    json = cJSON_CreateObject();
-    cJSON_AddArrayToObject(json, "tasks");
   }
 
   return json;
