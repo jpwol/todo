@@ -110,35 +110,13 @@ void print_json_string() {
     fprintf(stderr, "Error: \"tasks\" is not an array.\n");
     return;
   }
-
-  int task_arr_size = cJSON_GetArraySize(task_array);
-  for (int i = 0; i < task_arr_size; i++) {
-    cJSON* task_group = cJSON_GetArrayItem(task_array, i);
-    if (!cJSON_IsObject(task_group)) {
-      fprintf(stderr, "Warning: task group %d is not an object.\n", i);
-      continue;
-    }
-
-    cJSON* group = task_group->child;
-    while (group != NULL) {
-      printf("Task Group: %s\n", group->string);
-
-      if (cJSON_IsArray(group)) {
-        int inner_arr_size = cJSON_GetArraySize(group);
-        for (int j = 0; j < inner_arr_size; j++) {
-          cJSON* task = cJSON_GetArrayItem(group, j);
-          if (cJSON_IsObject(task)) {
-            cJSON* task_item = task->child;
-            while (task_item != NULL) {
-              printf("\t%s: %s\n", task_item->string, task_item->valuestring);
-
-              task_item = task_item->next;
-            }
-          }
-        }
-      }
-      group = group->next;
-    }
+  cJSON* group = cJSON_GetArrayItem(task_array, 0);
+  cJSON* group_array = group->child;
+  printf("%s:\n", group_array->string);
+  int arr_len = cJSON_GetArraySize(group_array);
+  for (int i = 0; i < arr_len; i++) {
+    cJSON* task = cJSON_GetArrayItem(group_array, i)->child;
+    printf("   %s: %s\n", task->string, task->valuestring);
   }
 }
 
@@ -148,14 +126,14 @@ void print_help_message() {
       "Make and view todo lists in the command line\n\n"
       "If todo file exists, use 'todo' to print out todo list. Else:\n\n"
       "Options:\n"
-      "\t-h\tprint this help message\n"
-      "\t-m\tmake a todo file\n"
-      "\t-d\tdelete a todo file/group/task\n"
-      "  \t\tuse todo -d [<group>] [task]\n"
-      "\t-g\tcreate a todo group\n"
-      "  \t\tuse todo -g <group>\n"
-      "\t-a\tadd a task to a group\n"
-      "  \t\tuse todo -a <group> <task>\n"};
+      "   -h, --help\tprint this help message\n"
+      "   -m\t\tmake a todo file\n"
+      "   -d\t\tdelete a todo file/group/task\n"
+      "   \t\tuse todo -d [<group>] [task]\n"
+      "   -g\t\tcreate a todo group\n"
+      "   \t\tuse todo -g <group>\n"
+      "   -a\t\tadd a task to a group\n"
+      "   \t\tuse todo -a <group> <task>\n"};
 
   printf("%s", help_message);
 }
@@ -199,7 +177,7 @@ void add_task(char* task_string) {
     cJSON* task = cJSON_CreateObject();
     int arr_len = cJSON_GetArraySize(group_array);
     char* buf = (char*)malloc(12);
-    snprintf(buf, sizeof(buf), "%d", arr_len);
+    snprintf(buf, sizeof(buf), "%d", arr_len + 1);
     cJSON_AddStringToObject(task, buf, task_string);
     cJSON_AddItemToArray(group_array, task);
     save_file(json);
@@ -318,9 +296,10 @@ void delete_task_group(char* group_name) {
 }
 
 void make_file(char* name) {
-  int file_exists = check_file_status();
-  if (file_exists) {
-    printf("todo already exists.\nUse todo -h for help.\n");
+  if (check_file_status()) {
+    printf("todo already exists.\nUse todo -h for help\n");
+  } else if (name == NULL) {
+    fprintf(stderr, "Usage: todo m <task name>\nUse todo -h for help\n");
   } else {
     todo = fopen("todo.json", "w");
     fclose(todo);
