@@ -89,5 +89,5 @@ To begin, consider running "todo -h" for a list of options.
 
 ### Notes
 
-> [!TODO]
+> **TODO**💡
 > Implement some sort of "checkoff" ability, so you can see what tasks are done instead of deleting them.
