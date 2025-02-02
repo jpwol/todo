@@ -8,14 +8,17 @@
  * of file creation. This simplifies the usage of the program, as well as
  * speeding up it's usage for the user.
  *
- * TODO: - Get rid of add and delete group functions.
- *       - Change arguments to not use '-' and just be the letter instead
- *       - Update help printout
+ * TODO: DONE: Get rid of add and delete group functions.
+ *       DONE: Change arguments to not use '-' and just be the letter instead
+ *       DONE: Update help printout
+ *       - Add safety checks throughout functions
+ *       DONE: For the love of God, add comments for documentation purposes. I'm
+ *             so tired of opening this file and being lost.
+ *       DONE: Add functionality to makefile function to add group name.
  *
  *       - FINISH add_task REWRITE!
  *         - Functionality is done, add safety checks and fix indexing
  *
- * DONE: Added functionality to makefile function to add group name.
  */
 
 int check_file_status();
@@ -30,10 +33,7 @@ void delete_file();
 void save_file(cJSON* json);
 
 void add_task(char* task_string);
-void delete_task(char* group_name, char* task_index);
-
-void add_task_group(char* group_name);
-void delete_task_group(char* group_name);
+void delete_task(char* task_index);
 
 void print_json_string();
 void print_help_message();
@@ -43,6 +43,8 @@ FILE* todo;
 char* task_name = NULL;
 
 int main(int argc, char* argv[]) {
+  // If args are less than two, that means the user just ran "todo", which
+  // should print out the file. Must make sure file exists before trying that.
   if (argc < 2) {
     if (check_file_status()) {
       print_json_string();
@@ -68,34 +70,23 @@ int check_file_status() {
 }
 
 void handle_args(int num_args, char** args) {
-  int file_exists = check_file_status();
-
-  if (!strcmp(args[1], "m")) {
+  if (!strcmp(args[1], "-m") || !strcmp(args[1], "m")) {
     make_file(args[2]);
-  } else if (!strcmp(args[1], "d")) {
+  } else if (!strcmp(args[1], "-d") || !strcmp(args[1], "--delete")) {
     if (num_args == 2)
       delete_file();
     else if (num_args == 3)
-      delete_task_group(args[2]);
-    else if (num_args == 4)
-      delete_task(args[2], args[3]);
+      delete_task(args[2]);
     else
       print_help_message();
-  } else if (!strcmp(args[1], "a")) {
+  } else if (!strcmp(args[1], "-a") || !strcmp(args[1], "--add")) {
     if (num_args == 3)
       add_task(args[2]);
     else
       print_help_message();
-  } else if (!strcmp(args[1], "-g")) {
-    if (num_args == 3)
-      add_task_group(args[2]);
-    else
-      print_help_message();
-  } else if (!strcmp(args[1], "-h")) {
+  } else if (!strcmp(args[1], "-h") || !strcmp(args[1], "--help")) {
     print_help_message();
   }
-
-  return;
 }
 
 void print_json_string() {
@@ -126,14 +117,13 @@ void print_help_message() {
       "Make and view todo lists in the command line\n\n"
       "If todo file exists, use 'todo' to print out todo list. Else:\n\n"
       "Options:\n"
-      "   -h, --help\tprint this help message\n"
-      "   -m\t\tmake a todo file\n"
-      "   -d\t\tdelete a todo file/group/task\n"
-      "   \t\tuse todo -d [<group>] [task]\n"
-      "   -g\t\tcreate a todo group\n"
-      "   \t\tuse todo -g <group>\n"
-      "   -a\t\tadd a task to a group\n"
-      "   \t\tuse todo -a <group> <task>\n"};
+      "   -h, --help\t\tprint this help message\n"
+      "   -m, --make\t\tmake a todo file\n"
+      "   \t\t\t- use todo -m <name>\n"
+      "   -d, --delete\t\tdelete a todo file/task\n"
+      "   \t\t\t- use todo -d [task index]\n"
+      "   -a, --add\t\tadd a task\n"
+      "   \t\t\t- use todo -a <task>\n"};
 
   printf("%s", help_message);
 }
@@ -142,34 +132,12 @@ void print_no_file_message() {
   printf("todo: no todo file exists.\nTry todo -h for help.\n");
 }
 
-void add_task_group(char* group_name) {
-  if (check_file_status()) {
-    cJSON* json = read_json_data();
-    cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
-
-    int array_size = cJSON_GetArraySize(tasks_array);
-    for (int i = 0; i < array_size; i++) {
-      cJSON* array_item = cJSON_GetArrayItem(tasks_array, i);
-      cJSON* idk = cJSON_GetObjectItem(array_item, group_name);
-      if (idk != NULL) {
-        printf("group already exists.\n");
-        return;
-      }
-    }
-
-    cJSON* group_array = cJSON_CreateObject();
-    cJSON_AddArrayToObject(group_array, group_name);
-    cJSON_AddItemToArray(tasks_array, group_array);
-    save_file(json);
-  } else {
-    print_no_file_message();
-  }
-}
-
 void add_task(char* task_string) {
   if (check_file_status()) {
     cJSON* json = read_json_data();
 
+    // Could consolidate group and group_array to be cJSON* group =
+    // cJSON_GetArrayItem(tasks_array, 0)->child but I'm tired.
     cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
     cJSON* group = cJSON_GetArrayItem(tasks_array, 0);
     cJSON* group_array = group->child;
@@ -181,113 +149,57 @@ void add_task(char* task_string) {
     cJSON_AddStringToObject(task, buf, task_string);
     cJSON_AddItemToArray(group_array, task);
     save_file(json);
-    // int array_size = cJSON_GetArraySize(tasks_array);
-
-    //   for (int i = 0; i < array_size; i++) {
-    //     cJSON* task_group = cJSON_GetArrayItem(tasks_array, i);
-    //     cJSON* task_group_object = cJSON_GetObjectItem(task_group,
-    //     group_name); int inner_arr_size =
-    //     cJSON_GetArraySize(task_group_object);
-    //
-    //     if (task_group_object != NULL) {
-    //       printf("todo: group found. Adding task as element %d.\n",
-    //              ++inner_arr_size);
-    //
-    //       cJSON* json_task = cJSON_CreateObject();
-    //       char* buf = (char*)malloc(12);
-    //
-    //       snprintf(buf, sizeof(buf), "%d", inner_arr_size);
-    //       cJSON_AddStringToObject(json_task, buf, task_string);
-    //       free(buf);
-    //
-    //       cJSON_AddItemToArray(task_group_object, json_task);
-    //     }
-    //   }
-    //   save_file(json);
-    // } else {
-    //   print_no_file_message();
-    // }
   }
 }
 
-void delete_task(char* group_name, char* task_index) {
+// What an awful function to write honestly.
+void delete_task(char* task_index) {
   if (check_file_status()) {
     cJSON* json = read_json_data();
-    cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
-    int array_size = cJSON_GetArraySize(tasks_array);
-
-    cJSON* task_group_array;
-    int inner_arr_size;
+    cJSON* task_array = cJSON_GetObjectItem(json, "tasks");
+    cJSON* group_array = cJSON_GetArrayItem(task_array, 0)->child;
+    int arr_len = cJSON_GetArraySize(group_array);
     char* endptr;
-    int task_index_integer = (int)strtol(task_index, &endptr, 10);
+    // not a fan of strtol
+    int num = strtol(task_index, &endptr, 10);
 
-    for (int i = 0; i < array_size; i++) {
-      cJSON* task_group = cJSON_GetArrayItem(tasks_array, i);
-      task_group_array = cJSON_GetObjectItem(task_group, group_name);
+    // simple safety check to make sure the deletion index is within the array
+    if (num < 1 || num > arr_len) {
+      printf("Requested action is out of bounds\n");
+      return;
+    }
+    // What happens here is we're creating a copy of the existing group_array,
+    // but without the task that the user wants to delete. I've tried doing this
+    // about 200 other ways and it's just not worth it for an implementation
+    // like this. I can't see anyone having a todo list 200 items long but who
+    // knows.
+    //
+    // May revisit in the future.
+    //
+    // Here is the new empty array
+    cJSON* new_group_array = cJSON_CreateArray();
 
-      if (task_group_array != NULL) {
-        printf("todo: group match found\n");
-        inner_arr_size = cJSON_GetArraySize(task_group_array);
+    // if (i == num - 1) continue; just skips over the item that the user wants
+    // to delete
+    for (int i = 0; i < arr_len; i++) {
+      if (i == num - 1) continue;
 
-        if (*endptr == '\0' && task_index_integer <= inner_arr_size) {
-          cJSON_DeleteItemFromArray(task_group_array, task_index_integer - 1);
-          printf("Deleting task from array.\n");
+      cJSON* task = cJSON_GetArrayItem(group_array, i)->child;
+      char* task_string = task->valuestring;
+      char buf[12];
+      snprintf(buf, sizeof(buf), "%d", cJSON_GetArraySize(new_group_array) + 1);
 
-        } else
-          printf("unknown input for index.\n");
-      }
+      cJSON* new_index_task = cJSON_CreateObject();
+      cJSON_AddStringToObject(new_index_task, buf, task_string);
+      cJSON_AddItemToArray(new_group_array, new_index_task);
     }
 
-    int index_reassign = task_index_integer;
-    for (int j = task_index_integer; j < inner_arr_size; j++) {
-      cJSON* array_item = cJSON_GetArrayItem(task_group_array, j - 1);
-      if (array_item == NULL) {
-        printf("no array item at %d\n", j);
-        continue;
-      }
-      printf("found string at location %d.\n", j);
-
-      char old_key[12];
-      char new_key[12];
-      snprintf(old_key, sizeof(old_key), "%d", j + 1);
-      snprintf(new_key, sizeof(new_key), "%d", index_reassign++);
-      cJSON* array_item_obj = cJSON_GetObjectItem(array_item, old_key);
-      if (cJSON_IsString(array_item_obj)) {
-        char* task = strdup(array_item_obj->valuestring);
-        printf("%s\n", task);
-        cJSON_DeleteItemFromObject(array_item, old_key);
-        cJSON_AddStringToObject(array_item, new_key, task);
-      }
-    }
-
-    save_file(json);
-  } else {
-    print_no_file_message();
-  }
-}
-
-void delete_task_group(char* group_name) {
-  if (check_file_status()) {
-    cJSON* json = read_json_data();
-    cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
-    int array_size = cJSON_GetArraySize(tasks_array);
-
-    int group_item_found = 0;
-    int group_item_index;
-
-    for (int i = 0; i < array_size; i++) {
-      cJSON* task_group = cJSON_GetArrayItem(tasks_array, i);
-      cJSON* idk = cJSON_GetObjectItem(task_group, group_name);
-      if (idk != NULL) {
-        printf("todo: match found. Removing %s\n", idk->string);
-        group_item_found = 1;
-        group_item_index = i;
-      }
-    }
-
-    if (group_item_found) {
-      cJSON_DeleteItemFromArray(tasks_array, group_item_index);
-    }
+    // Recreating the object within "tasks" that holds the array, but with our
+    // new fancy array.
+    const char* group_name = group_array->string;
+    cJSON* new_group_obj = cJSON_CreateObject();
+    cJSON_AddItemToObject(new_group_obj, group_name, new_group_array);
+    cJSON_ReplaceItemInArray(task_array, 0, new_group_obj);
 
     save_file(json);
   } else {
