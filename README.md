@@ -82,13 +82,12 @@ which will create a bin folder for you and place the binary within. Adding it to
 To begin, consider running "todo -h" for a list of options.
 
 - todo -h Prints out the help screen
-- todo -m Makes a new todo.json file in your current directory
+- todo -m \<name>\ Makes a new todo.json file in your current directory with a named todo task.
 - todo -d By itself, deletes your todo.json file
-  - todo -d \<group\> Deletes a named group if it exists
-  - todo -d \<group\> \<task\> Deletes a task from a named group if the group exits, and task as an integer.
-- todo -g \<group\> Adds a new named group if the group does not exist
-- todo -a \<group\> \<task\> Adds a string to the named group if the group exists.
+  - todo -d \<task\> Deletes a task, if the task is out of bounds it will return an error.
+- todo -a \<task\> Adds a string to the todo list with an index being the array's length plus 1.
 
 ### Notes
 
-Some bugs exist such as deleting tasks when more than one group exists will not update task numbers.
+> [!TODO]
+> Implement some sort of "checkoff" ability, so you can see what tasks are done instead of deleting them.
