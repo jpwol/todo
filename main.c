@@ -16,9 +16,9 @@
  *             so tired of opening this file and being lost.
  *       DONE: Add functionality to makefile function to add group name.
  *
- *       - FINISH add_task REWRITE!
- *         - Functionality is done, add safety checks and fix indexing
+ *       DONE: FINISH add_task REWRITE!
  *
+ *       EDIT: I LOVE MEMORY LEAKS! RAM IS NOT REAL!
  */
 
 int check_file_status();
@@ -80,10 +80,10 @@ void handle_args(int num_args, char** args) {
     else
       print_help_message();
   } else if (!strcmp(args[1], "-a") || !strcmp(args[1], "--add")) {
-    if (num_args == 3)
-      add_task(args[2]);
-    else
-      print_help_message();
+    // if (num_args == 3)
+    add_task(args[2]);
+    // else
+    // print_help_message();
   } else if (!strcmp(args[1], "-h") || !strcmp(args[1], "--help")) {
     print_help_message();
   }
@@ -113,7 +113,7 @@ void print_json_string() {
 
 void print_help_message() {
   char* help_message = {
-      "Usage: todo [option] [<group>] [task]\n"
+      "Usage: todo [option] [<task>]\n"
       "Make and view todo lists in the command line\n\n"
       "If todo file exists, use 'todo' to print out todo list. Else:\n\n"
       "Options:\n"
@@ -134,21 +134,27 @@ void print_no_file_message() {
 
 void add_task(char* task_string) {
   if (check_file_status()) {
-    cJSON* json = read_json_data();
+    if (task_string == NULL) {
+      fprintf(stderr, "Usage: todo -a <task>\nTry todo -h for help.\n");
+    } else {
+      cJSON* json = read_json_data();
 
-    // Could consolidate group and group_array to be cJSON* group =
-    // cJSON_GetArrayItem(tasks_array, 0)->child but I'm tired.
-    cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
-    cJSON* group = cJSON_GetArrayItem(tasks_array, 0);
-    cJSON* group_array = group->child;
+      // Could consolidate group and group_array to be cJSON* group =
+      // cJSON_GetArrayItem(tasks_array, 0)->child but I'm tired.
+      cJSON* tasks_array = cJSON_GetObjectItem(json, "tasks");
+      cJSON* group = cJSON_GetArrayItem(tasks_array, 0);
+      cJSON* group_array = group->child;
 
-    cJSON* task = cJSON_CreateObject();
-    int arr_len = cJSON_GetArraySize(group_array);
-    char* buf = (char*)malloc(12);
-    snprintf(buf, sizeof(buf), "%d", arr_len + 1);
-    cJSON_AddStringToObject(task, buf, task_string);
-    cJSON_AddItemToArray(group_array, task);
-    save_file(json);
+      cJSON* task = cJSON_CreateObject();
+      int arr_len = cJSON_GetArraySize(group_array);
+      char* buf = (char*)malloc(12);
+      snprintf(buf, sizeof(buf), "%d", arr_len + 1);
+      cJSON_AddStringToObject(task, buf, task_string);
+      cJSON_AddItemToArray(group_array, task);
+      save_file(json);
+    }
+  } else {
+    print_no_file_message();
   }
 }
 
@@ -211,7 +217,7 @@ void make_file(char* name) {
   if (check_file_status()) {
     printf("todo already exists.\nUse todo -h for help\n");
   } else if (name == NULL) {
-    fprintf(stderr, "Usage: todo m <task name>\nUse todo -h for help\n");
+    fprintf(stderr, "Usage: todo -m <task name>\nUse todo -h for help\n");
   } else {
     todo = fopen("todo.json", "w");
     fclose(todo);
@@ -234,6 +240,10 @@ void make_file(char* name) {
 
 void delete_file() {
   if (check_file_status()) {
+    char answer;
+    fprintf(stdout, "Really delete todo file? (y/n): ");
+    fscanf(stdin, "%c", &answer);
+    fprintf(stdout, "Deleting file...\n");
     remove("todo.json");
   } else {
     print_no_file_message();
