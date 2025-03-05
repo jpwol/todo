@@ -70,7 +70,7 @@ int check_file_status() {
 }
 
 void handle_args(int num_args, char** args) {
-  if (!strcmp(args[1], "-m") || !strcmp(args[1], "m")) {
+  if (!strcmp(args[1], "-m") || !strcmp(args[1], "--make")) {
     make_file(args[2]);
   } else if (!strcmp(args[1], "-d") || !strcmp(args[1], "--delete")) {
     if (num_args == 2)
