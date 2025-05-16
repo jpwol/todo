@@ -243,8 +243,12 @@ void delete_file() {
     char answer;
     fprintf(stdout, "Really delete todo file? (y/n): ");
     fscanf(stdin, "%c", &answer);
-    fprintf(stdout, "Deleting file...\n");
-    remove("todo.json");
+    if (answer == 'y') {
+      fprintf(stdout, "Deleting file...\n");
+      remove("todo.json");
+    } else {
+      fprintf(stdout, "Aborting deletion...\n");
+    }
   } else {
     print_no_file_message();
   }
